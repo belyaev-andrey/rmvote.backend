@@ -2,7 +2,9 @@ package com.dataart.rmvote.api;
 
 import com.dataart.rmvote.model.AuthRequest;
 import com.dataart.rmvote.model.AuthResponse;
+import com.dataart.rmvote.model.FeedbackText;
 import com.dataart.rmvote.model.UserInfo;
+import com.dataart.rmvote.model.Vote;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -46,9 +48,55 @@ public class VoteController {
     )
     @ApiOperation(value = "Log in user",
             response = UserInfo.class)
-    public UserInfo getFeedback(@ApiParam(value = "User ID to get infor about", required = true) @PathVariable int userId,
+    public UserInfo getFeedback(@ApiParam(value = "User ID to get information about", required = true) @PathVariable int userId,
                                 @ApiParam(value = "Authorization token", required = true) @RequestHeader("Auth-Token") String token) {
         return new UserInfo();
     }
+
+
+    @RequestMapping(
+            path = "user/{userId}/vote",
+            method = RequestMethod.POST
+    )
+    @ApiOperation(value = "Vote for user")
+    public void addVote(@ApiParam(value = "User ID to vote for", required = true) @PathVariable int userId,
+                        @ApiParam(value = "Vote value", allowableValues = "PRO, CONTRA", required = true) @RequestBody Vote vote,
+                        @ApiParam(value = "Authorization token", required = true) @RequestHeader("Auth-Token") String token){
+        log.info("Adding vote for user {} vote is {}", userId, vote);
+    }
+
+    @RequestMapping(
+            path = "user/{userId}/vote",
+            method = RequestMethod.DELETE
+    )
+    @ApiOperation(value = "Remove vote for user")
+    public void deleteVote(@ApiParam(value = "User ID to vote for", required = true) @PathVariable int userId,
+                        @ApiParam(value = "Authorization token", required = true) @RequestHeader("Auth-Token") String token){
+        log.info("Removing vote for user {}", userId);
+    }
+
+
+    @RequestMapping(
+            path = "user/{userId}/feedback",
+            method = RequestMethod.POST
+    )
+    @ApiOperation(value = "Provide feedback for user")
+    public void addFeedback(@ApiParam(value = "User ID to provide feedback", required = true) @PathVariable int userId,
+                        @ApiParam(value = "Feedback text", allowableValues = "PRO, CONTRA", required = true) @RequestBody FeedbackText feedbackText,
+                        @ApiParam(value = "Authorization token", required = true) @RequestHeader("Auth-Token") String token){
+        log.info("Adding feedback for user {} : {}", userId, feedbackText);
+    }
+
+
+    @RequestMapping(
+            path = "user/{userId}/feedback",
+            method = RequestMethod.DELETE
+    )
+    @ApiOperation(value = "Provide feedback for user")
+    public void deleteFeedback(@ApiParam(value = "User ID to remove feedback", required = true) @PathVariable int userId,
+                            @ApiParam(value = "Authorization token", required = true) @RequestHeader("Auth-Token") String token){
+        log.info("Deleting feedback for user {} : {}", userId);
+    }
+
 
 }
