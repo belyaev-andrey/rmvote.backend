@@ -51,6 +51,32 @@ public class LoginService {
 
     @Transactional(readOnly = true)
     public UserPrincipal login(String name, String password) {
+        UserPrincipal principal = getUserPrincipalByName(name);
+        //Don't want to compare it in DB
+        String hashed = getHash(name, password);
+        if (hashed.equals(principal.getToken())) {
+            principal.setToken(UUID.randomUUID().toString());
+            return principal;
+        } else {
+            throw new IllegalArgumentException("Username or password are not valid");
+        }
+    }
+
+
+    @Transactional (readOnly = true)
+    public UserPrincipal updatePmName(String name, String pmName){
+        UserPrincipal principal = getUserPrincipalByName(name);
+        try {
+            jdbcTemplate.update("update users set pm_name = ? where user_id = ?", pmName, principal.getId());
+            principal.setPmName(pmName);
+        } catch (DataAccessException e) {
+            log.error("Issue with updating PM name for user", e);
+            throw new IllegalStateException("Problem with database access", e);
+        }
+        return principal;
+    }
+
+    private UserPrincipal getUserPrincipalByName(String name) {
         UserPrincipal principal;
         try {
             principal =
@@ -63,14 +89,7 @@ public class LoginService {
             log.error("Issue with DB access", e);
             throw new IllegalStateException("Problem with database access", e);
         }
-        //Don't want to compare it in DB
-        String hashed = getHash(name, password);
-        if (hashed.equals(principal.getToken())) {
-            principal.setToken(UUID.randomUUID().toString());
-            return principal;
-        } else {
-            throw new IllegalArgumentException("Username or password are not valid");
-        }
+        return principal;
     }
 
     private static String getHash(String name, String password) {

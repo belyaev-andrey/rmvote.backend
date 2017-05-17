@@ -35,9 +35,11 @@ public class VoteService {
             contra = 1;
         }
         //Just delete votes to avoid hassle with merge statement which is not supported on every DB.
-        int voted = deleteVote(userId, voter);
+        boolean voted = deleteVote(userId, voter) > 0;
+        if (log.isTraceEnabled() && voted){
+            log.trace("{}'s vote for user {} was deleted before recording a new vote", voter, userId);
+        }
         try {
-            log.trace("User {} voted for user {}: {}", voter.getName(), userId, (voted > 0));
             Timestamp now = Timestamp.from(Instant.now());
             jdbcTemplate.update("insert into votes (user_id, vote_pro, vote_contra, voter_id, vote_date) values (?,?,?,?,?)", userId, pro, contra, voter.getId(), now);
         } catch (DataAccessException e) {

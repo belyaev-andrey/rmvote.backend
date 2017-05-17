@@ -16,6 +16,6 @@ public class UserInfo {
     private Boolean voted;
     private Integer positiveVotes;
     private Integer negativeVotes;
-    private UserFeedback[] feedbacks;
+    private FeedbackText[] feedbacks;
 
 }

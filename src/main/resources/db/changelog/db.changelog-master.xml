@@ -7,7 +7,7 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd
         http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
 
-    <changeSet id="1" author="abelyaev">
+    <changeSet id="ab-1" author="abelyaev">
         <comment>Create users auth table</comment>
         <createTable tableName="users">
             <column name="user_id" type="integer" autoIncrement="true">
@@ -19,15 +19,16 @@
             <column name="password" type="varchar(2000)">
                 <constraints nullable="false"/>
             </column>
+            <column name="pm_name" type="varchar(2000)"/>
         </createTable>
     </changeSet>
 
     <changeSet id="ab-2" author="abelyaev">
-        <comment>Creating a voting table, adding a column to store PM name for a user</comment>
-        <addColumn tableName="users">
-            <column name="pm_name" type="varchar(2000)"/>
-        </addColumn>
+        <comment>Creating a voting table</comment>
         <createTable tableName="votes">
+            <column name="vote_id" type="integer" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
             <column name="user_id" type="integer">
                 <constraints nullable="false"/>
             </column>
@@ -40,7 +41,37 @@
                 <constraints nullable="false"/>
             </column>
         </createTable>
-        <addPrimaryKey tableName="votes" columnNames="user_id,voter_id"/>
+        <createIndex tableName="votes" indexName="votes_idx">
+            <column name="user_id"/>
+            <column name="voter_id"/>
+            <column name="vote_date"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="ab-3" author="abelyaev">
+        <comment>Creating a feedback table</comment>
+        <createTable tableName="feedbacks">
+            <column name="feedback_id" type="integer" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="integer">
+                <constraints nullable="false"/>
+            </column>
+            <column name="feedback_text" type="varchar(2000)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="author_id" type="integer">
+                <constraints nullable="false" foreignKeyName="feedbacks_users_fk" referencedTableName="users" referencedColumnNames="user_id"/>
+            </column>
+            <column name="feedback_date" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex tableName="feedbacks" indexName="comments_idx">
+            <column name="user_id"/>
+            <column name="author_id"/>
+            <column name="feedback_date"/>
+        </createIndex>
     </changeSet>
 
 </databaseChangeLog>

@@ -4,13 +4,16 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 /**
  *
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class FeedbackText {
+@SuppressWarnings("serial")
+public class FeedbackText implements Serializable {
 
     private String author;
     private String text;

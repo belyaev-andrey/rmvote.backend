@@ -6,6 +6,7 @@ import com.dataart.rmvote.model.AuthResponse;
 import com.dataart.rmvote.model.FeedbackText;
 import com.dataart.rmvote.model.UserInfo;
 import com.dataart.rmvote.model.Vote;
+import com.dataart.rmvote.service.FeedbackService;
 import com.dataart.rmvote.service.LoginService;
 import com.dataart.rmvote.service.VoteService;
 import io.swagger.annotations.Api;
@@ -43,12 +44,14 @@ public class VoteController {
 
     private final LoginService loginService;
     private final VoteService voteService;
+    private final FeedbackService feedbackService;
     private final Cache cache;
 
     @Autowired
-    public VoteController(LoginService loginService, VoteService voteService, CacheManager cacheManager) {
+    public VoteController(LoginService loginService, VoteService voteService, FeedbackService feedbackService, CacheManager cacheManager) {
         this.loginService = loginService;
         this.voteService = voteService;
+        this.feedbackService = feedbackService;
         cache = cacheManager.getCache("login");
     }
 
@@ -108,10 +111,10 @@ public class VoteController {
                         @ApiParam(value = "Vote value", allowableValues = "PRO, CONTRA", required = true) @RequestBody Vote vote,
                         @ApiParam(value = "Authorization token", required = true) @RequestHeader("Auth-Token") String token,
                         HttpServletRequest request) {
-        UserPrincipal user = getUserByToken(token, request);
-        log.info("Voting for user: {}, request form user {} host is {} , IP is {}", userId, user, request.getRemoteHost(), request.getRemoteAddr());
-        voteService.addVoteForUser(userId, vote.getValue(), user);
-        log.info("Vote for user {} registered. Voter {}", userId, user);
+        UserPrincipal principal = getUserByToken(token, request);
+        log.info("Voting for user: {}, request form user {} host is {} , IP is {}", userId, principal, request.getRemoteHost(), request.getRemoteAddr());
+        voteService.addVoteForUser(userId, vote.getValue(), principal);
+        log.info("Vote for user {} registered. Voter {}", userId, principal);
     }
 
     @RequestMapping(
@@ -122,10 +125,10 @@ public class VoteController {
     public void deleteVote(@ApiParam(value = "User ID to vote for", required = true) @PathVariable int userId,
                            @ApiParam(value = "Authorization token", required = true) @RequestHeader("Auth-Token") String token,
                            HttpServletRequest request) {
-        UserPrincipal user = getUserByToken(token, request);
-        log.info("Removing vote for user: {}, request form user {} host is {} , IP is {}", userId, user, request.getRemoteHost(), request.getRemoteAddr());
-        voteService.deleteVote(userId, user);
-        log.info("Vote removal for user {} registered. Voter {}", userId, user);
+        UserPrincipal principal = getUserByToken(token, request);
+        log.info("Removing vote for user: {}, request form user {} host is {} , IP is {}", userId, principal, request.getRemoteHost(), request.getRemoteAddr());
+        voteService.deleteVote(userId, principal);
+        log.info("Vote for user {} deleted. Voter {}", userId, principal);
     }
 
     @RequestMapping(
@@ -134,10 +137,16 @@ public class VoteController {
     )
     @ApiOperation(value = "Provide feedback for user")
     public void addFeedback(@ApiParam(value = "User ID to provide feedback", required = true) @PathVariable int userId,
-                            @ApiParam(value = "Feedback text", allowableValues = "PRO, CONTRA", required = true) @RequestBody FeedbackText feedbackText,
+                            @ApiParam(value = "Feedback text up to 2000 chars", required = true) @RequestBody FeedbackText feedbackText,
                             @ApiParam(value = "Authorization token", required = true) @RequestHeader("Auth-Token") String token,
                             HttpServletRequest request) {
-        log.info("Adding feedback for user {} : {}", userId, feedbackText);
+        UserPrincipal principal = getUserByToken(token, request);
+        //Quite an ugly solution, but we agreed on this with FE developer
+        String author = feedbackText.getAuthor();
+        updatePmName(principal, author);
+        log.info("Providing feedback for user: {}, request form user {} host is {} , IP is {}", userId, principal, request.getRemoteHost(), request.getRemoteAddr());
+        feedbackService.addCommentForUser(userId, feedbackText, principal);
+        log.info("Feedabck for user {} registered. Author {}", userId, principal);
     }
 
     @RequestMapping(
@@ -148,7 +157,10 @@ public class VoteController {
     public void deleteFeedback(@ApiParam(value = "User ID to remove feedback", required = true) @PathVariable int userId,
                                @ApiParam(value = "Authorization token", required = true) @RequestHeader("Auth-Token") String token,
                                HttpServletRequest request) {
-        log.info("Deleting feedback for user {}", userId);
+        UserPrincipal principal = getUserByToken(token, request);
+        log.info("Deleting feedback for user: {}, request form user {} host is {} , IP is {}", userId, principal, request.getRemoteHost(), request.getRemoteAddr());
+        feedbackService.deleteCommentForUser(userId, principal);
+        log.info("Feedback for user {} deleted. Author {}", userId, principal);
     }
 
     private UserPrincipal getUserByToken(String token, HttpServletRequest request) {
@@ -159,6 +171,13 @@ public class VoteController {
             throw new IllegalArgumentException(String.format("The user is not logged in, token is: %s", token));
         }
         return principal;
+    }
+
+    private void updatePmName(UserPrincipal principal, String newPmName) {
+        if (newPmName != null && !newPmName.equals(principal.getPmName())){
+            loginService.updatePmName(principal.getName(), newPmName);
+            cache.put(principal.getToken(), principal);
+        }
     }
 
 
