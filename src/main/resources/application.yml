@@ -1,0 +1,6 @@
+logging:
+  file: rmvote.log
+
+spring:
+  profiles:
+    active: dev

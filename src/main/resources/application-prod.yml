@@ -1,0 +1,6 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://192.168.196.173:5432/rmvote
+    driverClassName: org.postgresql.Driver
+    username: rmvote
+    password: rmvote

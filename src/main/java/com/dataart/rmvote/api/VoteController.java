@@ -50,7 +50,8 @@ public class VoteController {
             response = UserInfo.class)
     public UserInfo getFeedback(@ApiParam(value = "User ID to get information about", required = true) @PathVariable int userId,
                                 @ApiParam(value = "Authorization token", required = true) @RequestHeader("Auth-Token") String token) {
-        return new UserInfo();
+        UserInfo userInfo = new UserInfo();
+        return userInfo;
     }
 
 

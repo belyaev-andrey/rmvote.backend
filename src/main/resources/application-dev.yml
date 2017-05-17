@@ -1,0 +1,6 @@
+spring:
+  datasource:
+    url: jdbc:h2:tcp://localhost:8043/rmvote;DB_CLOSE_ON_EXIT=TRUE
+    driverClassName: org.h2.Driver
+    username: sa
+    password:
