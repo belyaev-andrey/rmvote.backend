@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class FeedbackText {
 
+    private String author;
     private String text;
 
 }

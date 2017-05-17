@@ -4,3 +4,9 @@ spring:
     driverClassName: org.postgresql.Driver
     username: rmvote
     password: rmvote
+    name: rmvote
+liquibase:
+  user: rmvote
+  password: rmvote
+admin:
+  token: caa6d33c-26c9-4bde-b6ff-b2cd2b45bed0

@@ -13,7 +13,6 @@ import lombok.NoArgsConstructor;
 public class UserInfo {
 
     private int userId;
-    private String userName;
     private boolean voted;
     private int positiveVotes;
     private int negativeVotes;

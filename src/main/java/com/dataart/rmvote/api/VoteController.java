@@ -5,11 +5,15 @@ import com.dataart.rmvote.model.AuthResponse;
 import com.dataart.rmvote.model.FeedbackText;
 import com.dataart.rmvote.model.UserInfo;
 import com.dataart.rmvote.model.Vote;
+import com.dataart.rmvote.service.LoginService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -18,6 +22,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletRequest;
+
 /**
  *
  */
@@ -25,7 +31,27 @@ import org.springframework.web.bind.annotation.RestController;
 @Api(tags = "Voting endpoint")
 @RequestMapping(value = "/api/v1", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 @RestController
+@CrossOrigin("*")
 public class VoteController {
+
+    @Value("${admin.token}")
+    private String adminToken;
+
+    @Autowired
+    private LoginService loginService;
+
+
+    @RequestMapping(path = "admin/create",
+            method = RequestMethod.POST,
+            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public void createUser(@RequestBody AuthRequest authRequest, @RequestHeader("Auth-Token") String token, HttpServletRequest request) {
+        if (!adminToken.equals(token)) {
+            throw new IllegalArgumentException("Please provide a proper token to create a new user");
+        }
+        log.info("Creating a new user: {}, creator's host is {} , IP is {}", authRequest.getUser(), request.getRemoteHost(), request.getRemoteAddr());
+        int id = loginService.createUser(authRequest.getUser(), authRequest.getPassword()).intValue();
+        log.info("Created user: {} with id {}", authRequest.getUser(), id);
+    }
 
     @ResponseBody
     @RequestMapping(
@@ -34,12 +60,13 @@ public class VoteController {
             consumes = MediaType.APPLICATION_JSON_UTF8_VALUE)
     @ApiOperation(value = "Log in user",
             response = AuthResponse.class)
-    public AuthResponse login (
+    public AuthResponse login(
             @ApiParam(value = "JSON with login data", required = true)
-            @RequestBody AuthRequest authRequest){
-        return new AuthResponse("OK", "token");
+            @RequestBody AuthRequest authRequest,
+            HttpServletRequest request) {
+        String token = loginService.login(authRequest.getUser(), authRequest.getPassword());
+        return new AuthResponse("OK", token);
     }
-
 
     @ResponseBody
     @RequestMapping(
@@ -49,11 +76,11 @@ public class VoteController {
     @ApiOperation(value = "Log in user",
             response = UserInfo.class)
     public UserInfo getFeedback(@ApiParam(value = "User ID to get information about", required = true) @PathVariable int userId,
-                                @ApiParam(value = "Authorization token", required = true) @RequestHeader("Auth-Token") String token) {
+                                @ApiParam(value = "Authorization token", required = true) @RequestHeader("Auth-Token") String token,
+                                HttpServletRequest request) {
         UserInfo userInfo = new UserInfo();
         return userInfo;
     }
-
 
     @RequestMapping(
             path = "user/{userId}/vote",
@@ -62,7 +89,8 @@ public class VoteController {
     @ApiOperation(value = "Vote for user")
     public void addVote(@ApiParam(value = "User ID to vote for", required = true) @PathVariable int userId,
                         @ApiParam(value = "Vote value", allowableValues = "PRO, CONTRA", required = true) @RequestBody Vote vote,
-                        @ApiParam(value = "Authorization token", required = true) @RequestHeader("Auth-Token") String token){
+                        @ApiParam(value = "Authorization token", required = true) @RequestHeader("Auth-Token") String token,
+                        HttpServletRequest request) {
         log.info("Adding vote for user {} vote is {}", userId, vote);
     }
 
@@ -72,10 +100,10 @@ public class VoteController {
     )
     @ApiOperation(value = "Remove vote for user")
     public void deleteVote(@ApiParam(value = "User ID to vote for", required = true) @PathVariable int userId,
-                        @ApiParam(value = "Authorization token", required = true) @RequestHeader("Auth-Token") String token){
+                           @ApiParam(value = "Authorization token", required = true) @RequestHeader("Auth-Token") String token,
+                           HttpServletRequest request) {
         log.info("Removing vote for user {}", userId);
     }
-
 
     @RequestMapping(
             path = "user/{userId}/feedback",
@@ -83,11 +111,11 @@ public class VoteController {
     )
     @ApiOperation(value = "Provide feedback for user")
     public void addFeedback(@ApiParam(value = "User ID to provide feedback", required = true) @PathVariable int userId,
-                        @ApiParam(value = "Feedback text", allowableValues = "PRO, CONTRA", required = true) @RequestBody FeedbackText feedbackText,
-                        @ApiParam(value = "Authorization token", required = true) @RequestHeader("Auth-Token") String token){
+                            @ApiParam(value = "Feedback text", allowableValues = "PRO, CONTRA", required = true) @RequestBody FeedbackText feedbackText,
+                            @ApiParam(value = "Authorization token", required = true) @RequestHeader("Auth-Token") String token,
+                            HttpServletRequest request) {
         log.info("Adding feedback for user {} : {}", userId, feedbackText);
     }
-
 
     @RequestMapping(
             path = "user/{userId}/feedback",
@@ -95,8 +123,9 @@ public class VoteController {
     )
     @ApiOperation(value = "Provide feedback for user")
     public void deleteFeedback(@ApiParam(value = "User ID to remove feedback", required = true) @PathVariable int userId,
-                            @ApiParam(value = "Authorization token", required = true) @RequestHeader("Auth-Token") String token){
-        log.info("Deleting feedback for user {} : {}", userId);
+                               @ApiParam(value = "Authorization token", required = true) @RequestHeader("Auth-Token") String token,
+                               HttpServletRequest request) {
+        log.info("Deleting feedback for user {}", userId);
     }
 
 

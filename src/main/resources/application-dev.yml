@@ -1,6 +1,13 @@
 spring:
   datasource:
-    url: jdbc:h2:tcp://localhost:8043/rmvote;DB_CLOSE_ON_EXIT=TRUE
+    url: jdbc:h2:tcp://localhost/~/rmvote
     driverClassName: org.h2.Driver
-    username: sa
+    username: rmvote
     password:
+    name: rmvote
+liquibase:
+  user: rmvote
+  password:
+admin:
+  token: caa6d33c-26c9-4bde-b6ff-b2cd2b45bed0
+

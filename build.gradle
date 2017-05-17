@@ -30,19 +30,19 @@ sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 dependencies {
-    // tag::jetty[]
     compile("org.springframework.boot:spring-boot-starter-web") {
         exclude module: "spring-boot-starter-tomcat"
     }
     compile("org.springframework.boot:spring-boot-starter-jetty")
-    // end::jetty[]
-    // tag::actuator[]
     compile("org.springframework.boot:spring-boot-starter-actuator")
-    // end::actuator[]
+    compile("org.springframework.boot:spring-boot-starter-jdbc")
     compile("org.projectlombok:lombok:1.16.14")
     compile("io.springfox:springfox-swagger2:2.6.1")
     compile("io.springfox:springfox-swagger-ui:2.6.1")
     compile("org.postgresql:postgresql:42.1.1")
-    compile("com.h2database:h2:1.4.192")
+    compile("org.liquibase:liquibase-core:3.5.3")
+    compile ("org.mindrot:jbcrypt:0.4")
+
+    compile("com.h2database:h2:1.4.195")
     testCompile("junit:junit")
 }

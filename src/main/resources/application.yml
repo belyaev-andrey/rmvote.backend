@@ -1,6 +1,9 @@
 logging:
   file: rmvote.log
 
+liquibase:
+  change-log: classpath:db/changelog/db.changelog-master.xml
+
 spring:
   profiles:
     active: dev
