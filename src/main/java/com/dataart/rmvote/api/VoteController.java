@@ -1,11 +1,11 @@
 package com.dataart.rmvote.api;
 
-import com.dataart.rmvote.model.UserPrincipal;
 import com.dataart.rmvote.model.AuthRequest;
 import com.dataart.rmvote.model.AuthResponse;
 import com.dataart.rmvote.model.FeedbackText;
-import com.dataart.rmvote.model.UserInfo;
+import com.dataart.rmvote.model.UserPrincipal;
 import com.dataart.rmvote.model.Vote;
+import com.dataart.rmvote.model.VotesSummary;
 import com.dataart.rmvote.service.FeedbackService;
 import com.dataart.rmvote.service.LoginService;
 import com.dataart.rmvote.service.VoteService;
@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
  *
@@ -92,14 +93,18 @@ public class VoteController {
             method = RequestMethod.GET
     )
     @ApiOperation(value = "Get feedback for a particular user",
-            response = UserInfo.class)
-    public UserInfo getFeedback(@ApiParam(value = "User ID to get information about", required = true) @PathVariable int userId,
-                                @ApiParam(value = "Authorization token", required = true) @RequestHeader("Auth-Token") String token,
-                                HttpServletRequest request) {
-        log.info("Getting info for user: {}, request's host is {} , IP is {}", userId, request.getRemoteHost(), request.getRemoteAddr());
-
-        UserInfo userInfo = new UserInfo();
-        return userInfo;
+            response = VotesSummary.class)
+    public VotesSummary getFeedback(@ApiParam(value = "User ID to get information about", required = true) @PathVariable int userId,
+                                    @ApiParam(value = "Authorization token", required = true) @RequestHeader("Auth-Token") String token,
+                                    HttpServletRequest request) {
+        UserPrincipal principal = getUserByToken(token, request);
+        log.info("Getting vote info for user: {}, request's host is {} , IP is {}. Request by user: {}",
+                userId, request.getRemoteHost(), request.getRemoteAddr(), principal);
+        VotesSummary votesSummary = voteService.getVotesForUser(userId);
+        List<FeedbackText> feedbackList = feedbackService.getFeedbackForUser(userId);
+        votesSummary.setFeedbacks(feedbackList.toArray(new FeedbackText[feedbackList.size()]));
+        log.info("Vote info for user {} extracted. Request by user: {}", userId, principal);
+        return votesSummary;
     }
 
     @RequestMapping(
@@ -167,14 +172,15 @@ public class VoteController {
         log.trace("Trying to get logged user's info from cache by token {}, request from IP {}", token, request.getRemoteAddr());
         UserPrincipal principal = cache.get(token, UserPrincipal.class);
         log.trace("Logged user's info from cache by token {}, request from IP {}: {}", token, request.getRemoteAddr(), principal);
-        if (principal == null){
+        if (principal == null) {
             throw new IllegalArgumentException(String.format("The user is not logged in, token is: %s", token));
         }
         return principal;
     }
 
     private void updatePmName(UserPrincipal principal, String newPmName) {
-        if (newPmName != null && !newPmName.equals(principal.getPmName())){
+        if (newPmName != null && !newPmName.equals(principal.getPmName())) {
+            log.info("Updating user {} with new PM name {}", principal, newPmName);
             loginService.updatePmName(principal.getName(), newPmName);
             cache.put(principal.getToken(), principal);
         }

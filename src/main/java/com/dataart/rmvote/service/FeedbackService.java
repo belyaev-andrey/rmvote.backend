@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.List;
 
 /**
  *
@@ -53,6 +54,19 @@ public class FeedbackService {
             throw new IllegalStateException("Problem with database access", e);
         }
         return voted;
+    }
+
+    @Transactional(readOnly = true)
+    public List<FeedbackText> getFeedbackForUser(int userId){
+        try {
+            return jdbcTemplate.query("SELECT pm_name, feedback_text FROM users, feedbacks " +
+                    "WHERE users.user_id = feedbacks.author_id and feedbacks.user_id = ?",
+                    new Object[]{userId},
+                    (rs, rowNum) -> new FeedbackText(rs.getString(1), rs.getString(2)));
+        } catch (DataAccessException e) {
+            log.error("Issue with selecting feedbacks", e);
+            throw new IllegalStateException("Problem with database access", e);
+        }
     }
 
 }
