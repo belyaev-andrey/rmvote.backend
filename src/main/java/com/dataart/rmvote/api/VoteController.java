@@ -128,7 +128,7 @@ public class VoteController {
             method = RequestMethod.DELETE
     )
     @ApiOperation(value = "Remove vote for user")
-    public void deleteVote(@ApiParam(value = "User ID to vote for", required = true) @PathVariable int userId,
+    public void deleteVote(@ApiParam(value = "User ID to remove vote", required = true) @PathVariable int userId,
                            @ApiParam(value = "Authorization token", required = true) @RequestHeader("Auth-Token") String token,
                            HttpServletRequest request) {
         UserPrincipal principal = getUserByToken(token, request);
@@ -160,7 +160,7 @@ public class VoteController {
             path = "user/{userId}/feedback",
             method = RequestMethod.DELETE
     )
-    @ApiOperation(value = "Provide feedback for user")
+    @ApiOperation(value = "Delete feedback for user")
     public void deleteFeedback(@ApiParam(value = "User ID to remove feedback", required = true) @PathVariable int userId,
                                @ApiParam(value = "Authorization token", required = true) @RequestHeader("Auth-Token") String token,
                                HttpServletRequest request) {
