@@ -109,7 +109,8 @@ public class VoteController {
 
     @RequestMapping(
             path = "user/{userId}/vote",
-            method = RequestMethod.POST
+            method = RequestMethod.POST,
+            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE
     )
     @ApiOperation(value = "Vote for user")
     public void addVote(@ApiParam(value = "User ID to vote for", required = true) @PathVariable int userId,
@@ -138,7 +139,8 @@ public class VoteController {
 
     @RequestMapping(
             path = "user/{userId}/feedback",
-            method = RequestMethod.POST
+            method = RequestMethod.POST,
+            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE
     )
     @ApiOperation(value = "Provide feedback for user")
     public void addFeedback(@ApiParam(value = "User ID to provide feedback", required = true) @PathVariable int userId,
