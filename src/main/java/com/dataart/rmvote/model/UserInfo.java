@@ -13,9 +13,9 @@ import lombok.NoArgsConstructor;
 public class UserInfo {
 
     private int userId;
-    private boolean voted;
-    private int positiveVotes;
-    private int negativeVotes;
+    private Boolean voted;
+    private Integer positiveVotes;
+    private Integer negativeVotes;
     private UserFeedback[] feedbacks;
 
 }

@@ -4,7 +4,6 @@ spring:
     driverClassName: org.h2.Driver
     username: rmvote
     password:
-    name: rmvote
 liquibase:
   user: rmvote
   password:

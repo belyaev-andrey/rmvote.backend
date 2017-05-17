@@ -22,4 +22,25 @@
         </createTable>
     </changeSet>
 
+    <changeSet id="ab-2" author="abelyaev">
+        <comment>Creating a voting table, adding a column to store PM name for a user</comment>
+        <addColumn tableName="users">
+            <column name="pm_name" type="varchar(2000)"/>
+        </addColumn>
+        <createTable tableName="votes">
+            <column name="user_id" type="integer">
+                <constraints nullable="false"/>
+            </column>
+            <column name="vote_pro" type="integer"/>
+            <column name="vote_contra" type="integer"/>
+            <column name="voter_id" type="integer">
+                <constraints nullable="false" foreignKeyName="votes_users_fk" referencedTableName="users" referencedColumnNames="user_id"/>
+            </column>
+            <column name="vote_date" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey tableName="votes" columnNames="user_id,voter_id"/>
+    </changeSet>
+
 </databaseChangeLog>

@@ -1,10 +1,9 @@
 spring:
   datasource:
-    url: jdbc:postgresql://192.168.196.173:5432/rmvote
+    url: jdbc:postgresql://192.168.196.173:5432/postgres
     driverClassName: org.postgresql.Driver
     username: rmvote
     password: rmvote
-    name: rmvote
 liquibase:
   user: rmvote
   password: rmvote

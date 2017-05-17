@@ -1,17 +1,21 @@
 package com.dataart.rmvote.api;
 
+import com.dataart.rmvote.model.UserPrincipal;
 import com.dataart.rmvote.model.AuthRequest;
 import com.dataart.rmvote.model.AuthResponse;
 import com.dataart.rmvote.model.FeedbackText;
 import com.dataart.rmvote.model.UserInfo;
 import com.dataart.rmvote.model.Vote;
 import com.dataart.rmvote.service.LoginService;
+import com.dataart.rmvote.service.VoteService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -37,8 +41,16 @@ public class VoteController {
     @Value("${admin.token}")
     private String adminToken;
 
+    private final LoginService loginService;
+    private final VoteService voteService;
+    private final Cache cache;
+
     @Autowired
-    private LoginService loginService;
+    public VoteController(LoginService loginService, VoteService voteService, CacheManager cacheManager) {
+        this.loginService = loginService;
+        this.voteService = voteService;
+        cache = cacheManager.getCache("login");
+    }
 
 
     @RequestMapping(path = "admin/create",
@@ -64,8 +76,11 @@ public class VoteController {
             @ApiParam(value = "JSON with login data", required = true)
             @RequestBody AuthRequest authRequest,
             HttpServletRequest request) {
-        String token = loginService.login(authRequest.getUser(), authRequest.getPassword());
-        return new AuthResponse("OK", token);
+        log.info("Trying to login: {}, user's host is {} , IP is {}", authRequest.getUser(), request.getRemoteHost(), request.getRemoteAddr());
+        UserPrincipal principal = loginService.login(authRequest.getUser(), authRequest.getPassword());
+        log.info("Login for user {} succeeded, principal is {}", authRequest.getUser(), principal);
+        cache.put(principal.getToken(), principal);
+        return new AuthResponse("OK", principal.getToken());
     }
 
     @ResponseBody
@@ -73,11 +88,13 @@ public class VoteController {
             path = "user/{userId}/info",
             method = RequestMethod.GET
     )
-    @ApiOperation(value = "Log in user",
+    @ApiOperation(value = "Get feedback for a particular user",
             response = UserInfo.class)
     public UserInfo getFeedback(@ApiParam(value = "User ID to get information about", required = true) @PathVariable int userId,
                                 @ApiParam(value = "Authorization token", required = true) @RequestHeader("Auth-Token") String token,
                                 HttpServletRequest request) {
+        log.info("Getting info for user: {}, request's host is {} , IP is {}", userId, request.getRemoteHost(), request.getRemoteAddr());
+
         UserInfo userInfo = new UserInfo();
         return userInfo;
     }
@@ -91,7 +108,10 @@ public class VoteController {
                         @ApiParam(value = "Vote value", allowableValues = "PRO, CONTRA", required = true) @RequestBody Vote vote,
                         @ApiParam(value = "Authorization token", required = true) @RequestHeader("Auth-Token") String token,
                         HttpServletRequest request) {
-        log.info("Adding vote for user {} vote is {}", userId, vote);
+        UserPrincipal user = getUserByToken(token, request);
+        log.info("Voting for user: {}, request form user {} host is {} , IP is {}", userId, user, request.getRemoteHost(), request.getRemoteAddr());
+        voteService.addVoteForUser(userId, vote.getValue(), user);
+        log.info("Vote for user {} registered. Voter {}", userId, user);
     }
 
     @RequestMapping(
@@ -102,7 +122,10 @@ public class VoteController {
     public void deleteVote(@ApiParam(value = "User ID to vote for", required = true) @PathVariable int userId,
                            @ApiParam(value = "Authorization token", required = true) @RequestHeader("Auth-Token") String token,
                            HttpServletRequest request) {
-        log.info("Removing vote for user {}", userId);
+        UserPrincipal user = getUserByToken(token, request);
+        log.info("Removing vote for user: {}, request form user {} host is {} , IP is {}", userId, user, request.getRemoteHost(), request.getRemoteAddr());
+        voteService.deleteVote(userId, user);
+        log.info("Vote removal for user {} registered. Voter {}", userId, user);
     }
 
     @RequestMapping(
@@ -126,6 +149,16 @@ public class VoteController {
                                @ApiParam(value = "Authorization token", required = true) @RequestHeader("Auth-Token") String token,
                                HttpServletRequest request) {
         log.info("Deleting feedback for user {}", userId);
+    }
+
+    private UserPrincipal getUserByToken(String token, HttpServletRequest request) {
+        log.trace("Trying to get logged user's info from cache by token {}, request from IP {}", token, request.getRemoteAddr());
+        UserPrincipal principal = cache.get(token, UserPrincipal.class);
+        log.trace("Logged user's info from cache by token {}, request from IP {}: {}", token, request.getRemoteAddr(), principal);
+        if (principal == null){
+            throw new IllegalArgumentException(String.format("The user is not logged in, token is: %s", token));
+        }
+        return principal;
     }
 
 
