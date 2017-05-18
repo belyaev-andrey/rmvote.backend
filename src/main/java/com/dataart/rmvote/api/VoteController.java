@@ -100,7 +100,7 @@ public class VoteController {
         UserPrincipal principal = getUserByToken(token, request);
         log.info("Getting vote info for user: {}, request's host is {} , IP is {}. Request by user: {}",
                 userId, request.getRemoteHost(), request.getRemoteAddr(), principal);
-        VotesSummary votesSummary = voteService.getVotesForUser(userId);
+        VotesSummary votesSummary = voteService.getVotesForUser(userId, principal.getId());
         List<FeedbackText> feedbackList = feedbackService.getFeedbackForUser(userId);
         votesSummary.setFeedbacks(feedbackList.toArray(new FeedbackText[feedbackList.size()]));
         log.info("Vote info for user {} extracted. Request by user: {}", userId, principal);

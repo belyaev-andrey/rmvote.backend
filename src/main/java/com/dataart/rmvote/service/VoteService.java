@@ -64,11 +64,12 @@ public class VoteService {
     }
 
     @Transactional(readOnly = true)
-    public VotesSummary getVotesForUser(int userId){
+    public VotesSummary getVotesForUser(int userId, int voterId){
         List<VotesSummary> summary =
-                jdbcTemplate.query("SELECT user_id, sum(vote_pro), sum(vote_contra) FROM votes WHERE user_id = ? GROUP BY user_id",
-                        new Object[]{userId},
-                        (rs, rowNum) -> new VotesSummary(rs.getInt(1), true, rs.getInt(2), rs.getInt(3), null));
+                jdbcTemplate.query("SELECT user_id, sum(vote_pro), sum(vote_contra), " +
+                                "(select count(*) from votes where user_id = ? and voter_id = ?) FROM votes WHERE user_id = ? GROUP BY user_id",
+                        new Object[]{userId, voterId, userId},
+                        (rs, rowNum) -> new VotesSummary(rs.getInt(1), (rs.getInt(4) > 0), rs.getInt(2), rs.getInt(3), null));
         if (!CollectionUtils.isEmpty(summary)){
             return summary.get(0);
         } else {
