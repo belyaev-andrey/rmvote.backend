@@ -183,7 +183,7 @@ public class VoteController {
     private void updatePmName(UserPrincipal principal, String newPmName) {
         if (newPmName != null && !newPmName.equals(principal.getPmName())) {
             log.info("Updating user {} with new PM name {}", principal, newPmName);
-            loginService.updatePmName(principal.getName(), newPmName);
+            principal = loginService.updatePmName(principal.getName(), newPmName);
             cache.put(principal.getToken(), principal);
         }
     }

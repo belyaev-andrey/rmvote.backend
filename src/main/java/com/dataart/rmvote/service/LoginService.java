@@ -9,6 +9,7 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.MessageDigest;
@@ -63,7 +64,7 @@ public class LoginService {
     }
 
 
-    @Transactional (readOnly = true)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public UserPrincipal updatePmName(String name, String pmName){
         UserPrincipal principal = getUserPrincipalByName(name);
         try {
