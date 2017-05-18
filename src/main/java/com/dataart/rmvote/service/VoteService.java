@@ -72,7 +72,7 @@ public class VoteService {
         if (!CollectionUtils.isEmpty(summary)){
             return summary.get(0);
         } else {
-            return new VotesSummary(userId, false, null, null, null);
+            return new VotesSummary(userId, false, 0, 0, null);
         }
     }
 
