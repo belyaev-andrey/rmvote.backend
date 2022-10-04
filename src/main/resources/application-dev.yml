@@ -1,9 +1,11 @@
 spring:
   datasource:
-    url: jdbc:h2:tcp://localhost/~/rmvote
+    driver-class-name: org.h2.Driver
+    jdbcUrl: jdbc:h2:mem:rmvote.backend
+    url: jdbc:h2:mem:rmvote.backend
     driverClassName: org.h2.Driver
-    username: rmvote
-    password:
+    username: sa
+    password: ''
 liquibase:
   user: rmvote
   password:

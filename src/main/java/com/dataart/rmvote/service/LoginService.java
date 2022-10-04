@@ -2,7 +2,6 @@ package com.dataart.rmvote.service;
 
 import com.dataart.rmvote.model.UserPrincipal;
 import lombok.extern.slf4j.Slf4j;
-import org.postgresql.util.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -14,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -98,7 +98,7 @@ public class LoginService {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
             md.update(("$" + password + "#" + name).getBytes());
-            hashed = Base64.encodeBytes(md.digest());
+            hashed = Base64.getEncoder().encodeToString(md.digest());
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException("Bad Crypto Library", e);
         }

@@ -1,9 +1,16 @@
+management:
+  endpoint:
+    shutdown:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health
 logging:
   file: rmvote.log
 
-liquibase:
-  change-log: classpath:db/changelog/db.changelog-master.xml
-
 spring:
+  liquibase:
+    change-log: classpath:/db/changelog/db.changelog-master.xml
   profiles:
     active: dev
